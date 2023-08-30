@@ -19,11 +19,17 @@ pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 pub mod game {
     use crate::eadk;
+    use crate::game;
     #[derive(Debug, Clone, Copy)]
     pub struct Player {
         pub rect: eadk::Rect,
         pub color: eadk::Color,
         pub movement: [i16; 2],
+    }
+    impl Player {
+        pub fn render(self) {
+            eadk::display::push_rect_uniform(self.rect, self.color);
+        }
     }
 
     #[derive(Debug, Clone, Copy)]
@@ -34,18 +40,75 @@ pub mod game {
         pub right: bool,
         pub home: bool,
     }
+    impl Keys {
+        pub fn refresh(mut self, keyboard: eadk::input::KeyboardState) {
+            self.left =
+                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Left);
+            self.right =
+                eadk::input::KeyboardState::key_down(&keyboard,  eadk::input::Key::Right);
+            self.up =
+                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Up);
+            self.down =
+                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Down);
+            self.home =
+                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Home);
+        }
+    }
 
     #[derive(Debug, Clone, Copy)]
     pub struct Pipe {
         pub top: eadk::Rect,
         pub bottom: eadk::Rect,
         pub color: eadk::Color,
+        pub gaps: u16,
+        pub speed: u16,
+    }
+    impl Pipe {
+        pub fn collides(self, player: game::Player) -> bool {
+            if player.rect.x + player.rect.width > self.top.x
+                && player.rect.x < self.top.x + self.top.width
+            {
+                if player.rect.y <= self.top.y + self.top.height {
+                    return true;
+                } else if player.rect.y >= self.bottom.y + self.bottom.height {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }
+        pub fn reset(mut self) {
+            self.top.x = 280;
+            self.bottom.x = 280;
+        }
+        fn random_height() -> u16 {
+            let mut eadk_rng = eadk::random() as f32;
+            eadk_rng -= (eadk_rng as i32) as f32;
+            eadk_rng *= 1;
+        }
+        pub fn movement(mut self) {
+            self.top.x -= self.speed;
+            self.bottom.x -= self.speed;
+        }
+        pub fn render(self) {
+            eadk::display::push_rect_uniform(self.top, self.color);
+            eadk::display::push_rect_uniform(self.bottom, self.color);
+        }
     }
 
     #[derive(Debug, Clone, Copy)]
     pub struct Background {
         pub rect: eadk::Rect,
         pub color: eadk::Color,
+    }
+    impl Background {
+        pub fn render(self) {
+            eadk::display::push_rect_uniform(self.rect, self.color);
+        }
     }
 
     #[derive(Debug, Clone, Copy)]
@@ -56,6 +119,7 @@ pub mod game {
         pub last_keys: Keys,
         pub background: Background,
         pub keyboard: eadk::input::KeyboardState,
+        pub dead: bool,
     }
 
     #[allow(dead_code)]
@@ -82,7 +146,68 @@ fn main() {
             color: eadk::Color { rgb565: 31 }, // blue
             movement: [0, 0],
         },
-
+        background: game::Background {
+            rect: eadk::Rect {
+                x: 0,
+                y: 0,
+                width: 320,
+                height: 240,
+            },
+            color: eadk::Color { rgb565: 65535 },
+        },
+        pipes: [
+            game::Pipe {
+                top: eadk::Rect {
+                    x: 100,
+                    y: 0,
+                    width: 10,
+                    height: 60,
+                },
+                bottom: eadk::Rect {
+                    x: 100,
+                    y: 180,
+                    width: 10,
+                    height: 60,
+                },
+                color: eadk::Color { rgb565: 2016 },
+                gaps: 60,
+                speed: 5,
+            },
+            game::Pipe {
+                top: eadk::Rect {
+                    x: 160,
+                    y: 0,
+                    width: 10,
+                    height: 60,
+                },
+                bottom: eadk::Rect {
+                    x: 160,
+                    y: 180,
+                    width: 10,
+                    height: 60,
+                },
+                color: eadk::Color { rgb565: 2016 },
+                gaps: 60,
+                speed: 5,
+            },
+            game::Pipe {
+                top: eadk::Rect {
+                    x: 220,
+                    y: 0,
+                    width: 10,
+                    height: 60,
+                },
+                bottom: eadk::Rect {
+                    x: 220,
+                    y: 180,
+                    width: 10,
+                    height: 60,
+                },
+                color: eadk::Color { rgb565: 2016 },
+                gaps: 60,
+                speed: 5,
+            },
+        ],
         keys: game::Keys {
             up: false,
             down: false,
@@ -98,27 +223,16 @@ fn main() {
             home: false,
         },
         keyboard: eadk::input::KeyboardState::scan(),
+        dead: false,
     };
 
     loop {
         /* SCAN KEYBOARD */
         game.keyboard = eadk::input::KeyboardState::scan();
-
         game.last_keys = game.keys;
-
-        /* INPUT CHECK */
-        game.keys.left =
-            eadk::input::KeyboardState::key_down(&game.keyboard, eadk::input::Key::Left);
-        game.keys.right =
-            eadk::input::KeyboardState::key_down(&game.keyboard, eadk::input::Key::Right);
-        game.keys.up = eadk::input::KeyboardState::key_down(&game.keyboard, eadk::input::Key::Up);
-        game.keys.down =
-            eadk::input::KeyboardState::key_down(&game.keyboard, eadk::input::Key::Down);
-        game.keys.home =
-            eadk::input::KeyboardState::key_down(&game.keyboard, eadk::input::Key::Home);
+        game.keys.refresh(game.keyboard);
 
         /* MOVEMENT */
-
         // vertical
         if game.keys.up && !game.last_keys.up {
             game.player.movement[1] = -5;
@@ -157,55 +271,16 @@ fn main() {
         eadk::display::wait_for_vblank();
 
         // background
-        eadk::display::push_rect_uniform(
-            eadk::Rect {
-                x: 0,
-                y: 0,
-                width: 320,
-                height: 240,
-            },
-            eadk::Color { rgb565: 65535 },
-        );
+        game.background.render();
+
+        // pipes
+        for pipe in game.pipes {
+            pipe.movement();
+            pipe.render();
+            game.dead = pipe.collides(game.player);
+        }
 
         // player
-        eadk::display::push_rect_uniform(game.player.rect, game.player.color);
+        game.player.render();
     }
 }
-
-/*
- * Initial Application Test:
- */
-
-/*
-#[no_mangle]
-pub fn main() {
-    let white = eadk::Color { rgb565: 65535 };
-    let black = eadk::Color { rgb565: 0 };
-    let red = eadk::Color { rgb565: 63488 };
-    let green = eadk::Color { rgb565: 2016 };
-    let blue = eadk::Color { rgb565: 31 };
-
-    let background = eadk::Rect {
-        x: 0,
-        y: 0,
-        width: 320,
-        height: 240,
-    };
-
-    loop {
-        let keyboard = eadk::input::KeyboardState::scan();
-        eadk::display::wait_for_vblank();
-        if eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::One) == true {
-            eadk::display::push_rect_uniform(background, black);
-        } else if eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Two) {
-            eadk::display::push_rect_uniform(background, red);
-        } else if eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Three) == true {
-            eadk::display::push_rect_uniform(background, green);
-        } else if eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Four) {
-            eadk::display::push_rect_uniform(background, blue);
-        } else {
-            eadk::display::push_rect_uniform(background, white);
-        }
-    }
-}
-*/

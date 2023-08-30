@@ -1,5 +1,8 @@
 [package]
-name = "epsilon-sample-app"
+name = "flappy-bird-numworks"
 version = "0.1.0"
-authors = ["NumWorks <contact@numworks.com>"]
+authors = ["BitRanger <crgautam2020@gmail.com>"]
 edition = "2018"
+
+[dependencies]
+rand = { version = "0.8.5", default-features = false }
