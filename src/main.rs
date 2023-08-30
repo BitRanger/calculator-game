@@ -7,7 +7,7 @@ pub mod eadk;
 
 #[used]
 #[link_section = ".rodata.eadk_app_name"]
-pub static EADK_APP_NAME: [u8; 10] = *b"HelloRust\0";
+pub static EADK_APP_NAME: [u8; 12] = *b"Flappy Bird\0";
 
 #[used]
 #[link_section = ".rodata.eadk_api_level"]
