@@ -85,10 +85,10 @@ pub mod game {
             self.top.x = 280;
             self.bottom.x = 280;
         }
-        fn random_height() -> u16 {
-            let mut eadk_rng = eadk::random() as f32;
-            eadk_rng -= (eadk_rng as i32) as f32;
-            eadk_rng *= 1;
+        fn _random_height() -> u16 {
+            let eadk_rng = eadk::random() as u16;
+            // TODO: Find a better way to implement a rng for u16 probably in range 20-220
+            return eadk_rng;
         }
         pub fn movement(mut self) {
             self.top.x -= self.speed;
@@ -281,6 +281,6 @@ fn main() {
         }
 
         // player
-        game.player.render();
+    game.player.render();
     }
 }
