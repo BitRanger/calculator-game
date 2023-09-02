@@ -68,27 +68,16 @@ pub mod game {
             if player.rect.x + player.rect.width > self.top.x
                 && player.rect.x < self.top.x + self.top.width
             {
-                if player.rect.y <= self.top.y + self.top.height {
-                    return true;
-                } else if player.rect.y >= self.bottom.y + self.bottom.height {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                player.rect.y <= self.top.y + self.top.height || player.rect.y >= self.bottom.y + self.bottom.height
             }
             else {
-                return false;
+                false
             }
         }
         pub fn reset(mut self) {
             self.top.x = 280;
             self.bottom.x = 280;
-        }
-        fn _random_height() -> u16 {
-            let eadk_rng = eadk::random() as u16;
-            // TODO: Find a better way to implement a rng for u16 probably in range 20-220
-            return eadk_rng;
+						self.top.height = game::Game::random_coordinate( 20.0, 220.0);
         }
         pub fn movement(mut self) {
             self.top.x -= self.speed;
@@ -121,16 +110,36 @@ pub mod game {
         pub keyboard: eadk::input::KeyboardState,
         pub dead: bool,
     }
-
-    #[allow(dead_code)]
-    fn random_u16() -> u16 {
+		impl Game {
+			pub fn random_coordinate(min: f32, max: f32) -> u16{
+				if max < min {
+					game::Game::panic();
+				}
+				let mut eadk_rng = eadk::random() as f32;
+				if eadk_rng < 0.0 {
+					eadk_rng *= -1.0; // makes sure that eadk_rng is positive
+				}
+				eadk_rng = eadk_rng - (eadk_rng as i32) as f32; // converts eadk_rng to a float from 0-1 
+				let eadk_rng: u16 = (eadk_rng * (max - min)) as u16;
+				eadk_rng
+			}
+			pub fn panic() {
+				loop {
+					eadk::display::push_rect_uniform(eadk::Rect {x:0,y:0,width:320,height:240}, eadk::Color {rgb565: 63488});
+				}
+			}
+	    #[allow(dead_code)]
+    pub fn old_random_u16() -> u16 {
         crate::eadk::random() as u16
     }
 
     #[allow(dead_code)]
-    fn random_coordinate() -> u16 {
+    pub fn old_random_coordinate() -> u16 {
         (crate::eadk::random() % 0xFF) as u16
     }
+		}
+
+
 }
 
 #[no_mangle]

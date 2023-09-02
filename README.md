@@ -4,6 +4,6 @@ I've been working on making apps for [Numworks](https://numworks.com) Calculator
 
 - [ ] Flappy Bird (IN PROGRESS)
 - [ ] Pong
-- [ ] Platformer Game... (maybe????)
+- [ ] Platformer Game… (maybe????)
 
-P.S. Excuse the horrible code and organization, I'm a high schooler.
+P.S. Excuse the horrible code and organization, I'm in high school.
