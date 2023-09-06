@@ -8,12 +8,12 @@ I've been working on making apps for [Numworks](https://numworks.com) Calculator
 
 P.S. Excuse the horrible code and organization, I'm in high school.
 
-[domain](192.168.86.35)
-[domain:80](192.168.86.35:80)
-[domain:443](192.168.86.35:443)
-[local](nixos.local)
-[local:80](nixos.local:80)
-[local:443](nixos.local:443)
-[localhost](nixos.localhost)
-[localhost:80](nixos.localhost:80)
-[localhost:443](nixos.localhost:443)
+[domain](http://192.168.86.35)
+[domain:80](http://192.168.86.35:80)
+[domain:443](http://192.168.86.35:443)
+[local](http://nixos.local)
+[local:80](http://nixos.local:80)
+[local:443](http://nixos.local:443)
+[localhost](http://nixos.localhost)
+[localhost:80](http://nixos.localhost:80)
+[localhost:443](http://nixos.localhost:443)
