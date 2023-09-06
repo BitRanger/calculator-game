@@ -7,3 +7,12 @@ I've been working on making apps for [Numworks](https://numworks.com) Calculator
 - [ ] Platformer Game… (maybe????)
 
 P.S. Excuse the horrible code and organization, I'm in high school.
+
+192.168.86.35:80
+192.168.86.35:443
+nixos.local
+nixos.local:80
+nixos.local:443
+nixos.localhost
+nixos.localhost:80
+nixos.localhost:443
