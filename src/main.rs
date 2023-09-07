@@ -5,282 +5,118 @@ use core::cmp::Ordering;
 
 pub mod eadk;
 
+// Declare name
 #[used]
 #[link_section = ".rodata.eadk_app_name"]
 pub static EADK_APP_NAME: [u8; 12] = *b"Flappy Bird\0";
 
+// Declare api level TODO: Find out what eadk api level is
 #[used]
 #[link_section = ".rodata.eadk_api_level"]
 pub static EADK_APP_API_LEVEL: u32 = 0;
 
+// Declare icon
 #[used]
 #[link_section = ".rodata.eadk_app_icon"]
 pub static EADK_APP_ICON: [u8; 4250] = *include_bytes!("../target/icon.nwi");
 
 pub mod game {
     use crate::eadk;
-    use crate::game;
-    #[derive(Debug, Clone, Copy)]
+
     pub struct Player {
-        pub rect: eadk::Rect,
-        pub color: eadk::Color,
-        pub movement: [i16; 2],
+        pub texture: Texture,
+        pub movement: [f32;2],
     }
     impl Player {
-        pub fn render(self) {
-            eadk::display::push_rect_uniform(self.rect, self.color);
+        pub fn render(&self) {
+            eadk::display::push_rect(self.texture.rect, self.texture.image);
+        }
+        pub fn movement() {
+            
         }
     }
-
-    #[derive(Debug, Clone, Copy)]
-    pub struct Keys {
-        pub up: bool,
-        pub down: bool,
-        pub left: bool,
-        pub right: bool,
-        pub home: bool,
-    }
-    impl Keys {
-        pub fn refresh(mut self, keyboard: eadk::input::KeyboardState) {
-            self.left =
-                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Left);
-            self.right =
-                eadk::input::KeyboardState::key_down(&keyboard,  eadk::input::Key::Right);
-            self.up =
-                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Up);
-            self.down =
-                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Down);
-            self.home =
-                eadk::input::KeyboardState::key_down(&keyboard, eadk::input::Key::Home);
-        }
-    }
-
-    #[derive(Debug, Clone, Copy)]
+    
+    // actually a pair of pipes; top & bottom
     pub struct Pipe {
-        pub top: eadk::Rect,
-        pub bottom: eadk::Rect,
-        pub color: eadk::Color,
-        pub gaps: u16,
-        pub speed: u16,
+        pub top: Texture,
+        pub bottom: Texture,
+        pub movement: [f32;2],
     }
     impl Pipe {
-        pub fn collides(self, player: game::Player) -> bool {
-            if player.rect.x + player.rect.width > self.top.x
-                && player.rect.x < self.top.x + self.top.width
-            {
-                if player.rect.y <= self.top.y + self.top.height {
-                    return true;
-                } else if player.rect.y >= self.bottom.y + self.bottom.height {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
-            else {
-                return false;
-            }
+        pub fn render(&self) {
+            eadk::display::push_rect(self.top.texture.rect, self.top.texture.image);
+            eadk::display::push_rect(self.bottom.texture.rect, self.bottom.texture.image);
         }
-        pub fn reset(mut self) {
-            self.top.x = 280;
-            self.bottom.x = 280;
-        }
-        fn _random_height() -> u16 {
-            let eadk_rng = eadk::random() as u16;
-            // TODO: Find a better way to implement a rng for u16 probably in range 20-220
-            return eadk_rng;
-        }
-        pub fn movement(mut self) {
-            self.top.x -= self.speed;
-            self.bottom.x -= self.speed;
-        }
-        pub fn render(self) {
-            eadk::display::push_rect_uniform(self.top, self.color);
-            eadk::display::push_rect_uniform(self.bottom, self.color);
-        }
+        pub fn movement() {
+            
+        }       
     }
-
-    #[derive(Debug, Clone, Copy)]
+    
     pub struct Background {
-        pub rect: eadk::Rect,
-        pub color: eadk::Color,
+        pub texture: UniformTexture,
     }
     impl Background {
-        pub fn render(self) {
-            eadk::display::push_rect_uniform(self.rect, self.color);
+        pub fn render(&self) {
+            eadk::display::push_rect(self.texture.rect, self.texture.color);
+        }        
+    }
+
+    pub struct Texture {
+        rect: eadk::Rect,
+        image: &[eadk::Color],
+    }
+    pub struct UniformTexture {
+        rect: eadk::Rect,
+        color: eadk::Color,
+    }
+    pub struct Game {
+        player: Player,
+        pipes: [Pipe;3],
+        background: Background,
+    }
+    impl Game {
+        pub fn render() {
+            self.player.render();
         }
     }
 
-    #[derive(Debug, Clone, Copy)]
-    pub struct Game {
-        pub player: Player,
-        pub pipes: [Pipe; 3],
-        pub keys: Keys,
-        pub last_keys: Keys,
-        pub background: Background,
-        pub keyboard: eadk::input::KeyboardState,
-        pub dead: bool,
-    }
-
-    #[allow(dead_code)]
-    fn random_u16() -> u16 {
-        crate::eadk::random() as u16
-    }
-
-    #[allow(dead_code)]
-    fn random_coordinate() -> u16 {
-        (crate::eadk::random() % 0xFF) as u16
-    }
 }
+
 
 #[no_mangle]
 fn main() {
-    let mut game = game::Game {
+    let mut game: game::Game = game::Game {
         player: game::Player {
-            rect: eadk::Rect {
-                x: 60,
-                y: 120,
-                width: 20,
-                height: 20,
+            texture: game::Texture {
+                rect: eadk::Rect {
+                    width: 20,
+                    height: 20,
+                    x: 0,
+                    y: 0,
+                },
+                image: images::
             },
-            color: eadk::Color { rgb565: 31 }, // blue
-            movement: [0, 0],
-        },
-        background: game::Background {
-            rect: eadk::Rect {
-                x: 0,
-                y: 0,
-                width: 320,
-                height: 240,
-            },
-            color: eadk::Color { rgb565: 65535 },
+            movement: [0.0, 0.0],
         },
         pipes: [
             game::Pipe {
-                top: eadk::Rect {
-                    x: 100,
-                    y: 0,
-                    width: 10,
-                    height: 60,
-                },
-                bottom: eadk::Rect {
-                    x: 100,
-                    y: 180,
-                    width: 10,
-                    height: 60,
-                },
-                color: eadk::Color { rgb565: 2016 },
-                gaps: 60,
-                speed: 5,
+                
             },
             game::Pipe {
-                top: eadk::Rect {
-                    x: 160,
-                    y: 0,
-                    width: 10,
-                    height: 60,
-                },
-                bottom: eadk::Rect {
-                    x: 160,
-                    y: 180,
-                    width: 10,
-                    height: 60,
-                },
-                color: eadk::Color { rgb565: 2016 },
-                gaps: 60,
-                speed: 5,
+                
             },
             game::Pipe {
-                top: eadk::Rect {
-                    x: 220,
-                    y: 0,
-                    width: 10,
-                    height: 60,
-                },
-                bottom: eadk::Rect {
-                    x: 220,
-                    y: 180,
-                    width: 10,
-                    height: 60,
-                },
-                color: eadk::Color { rgb565: 2016 },
-                gaps: 60,
-                speed: 5,
+
             },
         ],
-        keys: game::Keys {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            home: false,
+        background: game::Background {
+            texture: game::UniformTexture {
+                rect: eadk::Rect { x: 0, y: 0, width: 320, height:  240 },
+                color: eadk::Color { rgb565: 0x469d },
+            },
         },
-        last_keys: game::Keys {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            home: false,
-        },
-        keyboard: eadk::input::KeyboardState::scan(),
-        dead: false,
     };
-
     loop {
-        /* SCAN KEYBOARD */
-        game.keyboard = eadk::input::KeyboardState::scan();
-        game.last_keys = game.keys;
-        game.keys.refresh(game.keyboard);
-
-        /* MOVEMENT */
-        // vertical
-        if game.keys.up && !game.last_keys.up {
-            game.player.movement[1] = -5;
-        }
-
-        match game.player.movement[1].cmp(&0_i16) {
-            Ordering::Less => {
-                game.player.movement[1] = -game.player.movement[1];
-                if game.player.rect.y as i16 - game.player.movement[1] < 0 {
-                    game.player.rect.y = 0;
-                    game.player.movement[1] = 0;
-                } else {
-                    game.player.rect.y -= game.player.movement[1] as u16;
-                    game.player.movement[1] = -game.player.movement[1];
-                    game.player.movement[1] += 1;
-                }
-            }
-            Ordering::Greater => {
-                if game.player.rect.y + game.player.movement[1] as u16 >= 220 {
-                    game.player.rect.x = 60;
-                    game.player.rect.y = 120;
-                    game.player.movement[1] = 0;
-                } else {
-                    game.player.rect.y += game.player.movement[1] as u16;
-                    game.player.movement[1] += 1;
-                }
-            }
-            Ordering::Equal => {
-                if game.player.rect.y < 220 {
-                    game.player.movement[1] += 1;
-                }
-            }
-        }
-
-        /* RENDERING */
-        eadk::display::wait_for_vblank();
-
-        // background
-        game.background.render();
-
-        // pipes
-        for pipe in game.pipes {
-            pipe.movement();
-            pipe.render();
-            game.dead = pipe.collides(game.player);
-        }
-
-        // player
-    game.player.render();
+        
     }
 }
